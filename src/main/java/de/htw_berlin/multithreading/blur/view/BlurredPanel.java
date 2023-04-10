@@ -28,6 +28,5 @@ public class BlurredPanel extends JPanel implements ImageModelListener {
     @Override
     public void blurredImageChanged() {
         repaint();
-        System.out.println(".");
     }
 }

@@ -5,25 +5,43 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class ImageModel {
     private BufferedImage sourceImage;
     private BufferedImage blurredImage;
     private LinkedList<ImageModelListener> listeners;
+    private HashMap<String, AbstractBlurrer> blurrers;
 
     public ImageModel() {
         sourceImage = loadSourceImage(new File("res/kitten.png"));
         blurredImage = makeBlurredImage();
         listeners = new LinkedList<>();
+        blurrers = new HashMap<>();
+        blurrers.put("Simple non-threaded blurrer", new SimpleBlurrer(this));
+        blurrers.put("Single-threaded blurrer", new SingleThreadBlurrer(this));
+        blurrers.put("Multi-threaded blurrer", new MultiThreadBlurrer(this));
+        blurrers.put("Multi-threaded synchronized blurrer", new MultiThreadSynchronisedBlurrer(this));
+        blurrers.put("Multi-threaded blurrer (using pop)", new MultiThreadPopBlurrer(this));
     }
 
     /**
-     * Runs the given blurrer to blur the source image and notifies image listeners.
-     * @param blurrer
+     * Returns the list of avaialble blurrers (to be passed to runBlurrer as name). Names are taken from the internal blurrers list (initialized in Contructor).
+     * @return
      */
-    public void runBlurrer(AbstractBlurrer blurrer) {
-        blurrer.blur();
+    public Collection<String> getBlurrerNames() {
+        return blurrers.keySet();
+    }
+
+    /**
+     * Runs the given blurrer (for name: see getBlurrerNames()) to blur the source image and notifies image listeners.
+     * @param name
+     * @param radius
+     */
+    public void runBlurrer(String name, int radius) {
+        blurrers.get(name).blur(radius);
         blurredImageChanged();
     }
 

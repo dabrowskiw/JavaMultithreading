@@ -1,7 +1,8 @@
 package de.htw_berlin.multithreading.blur.control;
 
 import de.htw_berlin.multithreading.blur.model.ImageModel;
-import de.htw_berlin.multithreading.blur.model.SimpleBlurrer;
+
+import java.util.Collection;
 
 public class BlurController {
     private ImageModel model;
@@ -10,7 +11,15 @@ public class BlurController {
         this.model = model;
     }
 
-    public void blur() {
-        model.runBlurrer(new SimpleBlurrer(model, 3));
+    public void blur(String name, int radius) {
+        model.runBlurrer(name, radius);
+    }
+
+    /**
+     * Returns the list of avaialble blurrers (to be passed to blur as name).
+     * @return
+     */
+    public Collection<String> getBlurrerNames() {
+        return model.getBlurrerNames();
     }
 }
