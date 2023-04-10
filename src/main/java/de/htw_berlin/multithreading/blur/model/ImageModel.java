@@ -26,8 +26,8 @@ public class ImageModel {
         blurrers.put("Multi-threaded synchronized blurrer", new MultiThreadSynchronisedBlurrer(this));
         blurrers.put("Multi-threaded blurrer (using pop)", new MultiThreadPopBlurrer(this));
         blurrers.put("Producer-Consumer blurrer (no waiting)", new ProducerConsumerNoWaitBlurrer(this));
-        blurrers.put("Producer-Consumer blurrer", new ProducerConsumerBlurrer(this));
-        blurrers.put("Producer-Consumer blurrer (sync on tasks+image)", new ProducerConsumerTwoSyncsBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer (sync only on tasks)", new ProducerConsumerBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer (nested sync on tasks+image)", new ProducerConsumerTwoSyncsBlurrer(this));
         blurrers.put("Producer-Consumer blurrer (separated syncs)", new ProducerConsumerSeparateSyncsBlurrer(this));
     }
 

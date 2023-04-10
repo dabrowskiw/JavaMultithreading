@@ -43,20 +43,6 @@ public abstract class MultithreadedBlurrer extends AbstractBlurrer {
         }
     }
 
-    protected void blurPixels(BlurTask task) {
-        int[] blurredPixels = getBlurredPixels(task);
-        drawBlurredPixels(task, blurredPixels);
-    }
-
-/*    protected void blurPixels(BlurTask task) {
-        for (int xpos = task.getX(); xpos < task.getX()+ task.getWidth(); xpos++) {
-            for (int ypos = task.getY(); ypos < task.getY()+ task.getHeight(); ypos++) {
-                model.getBlurredImage().setRGB(xpos, ypos, getBlurredPixel(xpos, ypos, task.getRadius()));
-                model.blurredImageChanged();
-            }
-        }
-    }*/
-
     protected void markRegion(BlurTask task, Color color) {
         // First, make the part to blur red to make the build-up of the blurring visible
         for (int xpos = task.getX()+task.getWidth()-1; xpos >= task.getX(); xpos--) {

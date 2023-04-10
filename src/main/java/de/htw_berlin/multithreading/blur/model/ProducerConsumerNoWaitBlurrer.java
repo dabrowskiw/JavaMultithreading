@@ -11,7 +11,8 @@ public class ProducerConsumerNoWaitBlurrer extends MultithreadedBlurrer {
                 synchronized (tasks) {
                     task = tasks.getFirst();
                     tasks.removeFirst();
-                    blurPixels(task);
+                    int[] blurredPixels = getBlurredPixels(task);
+                    drawBlurredPixels(task, blurredPixels);
                 }
             }
         }

@@ -13,7 +13,8 @@ public class MultiThreadPopBlurrer extends MultithreadedBlurrer {
             while(!tasks.isEmpty()) {
                 task = tasks.pop();
                 markRegion(task, Color.red);
-                blurPixels(task);
+                int[] blurredPixels = getBlurredPixels(task);
+                drawBlurredPixels(task, blurredPixels);
             }
         }
     }

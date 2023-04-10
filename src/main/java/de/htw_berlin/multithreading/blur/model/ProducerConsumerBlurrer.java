@@ -19,7 +19,8 @@ public class ProducerConsumerBlurrer extends MultithreadedBlurrer {
                         task = tasks.getFirst();
                         tasks.removeFirst();
                     }
-                    blurPixels(task);
+                    int[] blurredPixels = getBlurredPixels(task);
+                    drawBlurredPixels(task, blurredPixels);
                 }
             } catch(InterruptedException e) {
                 e.printStackTrace();

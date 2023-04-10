@@ -10,11 +10,14 @@ public class MultiThreadSynchronisedBlurrer extends MultithreadedBlurrer {
             BlurTask task = null;
             while(!tasks.isEmpty()) {
                 synchronized (tasks) {
-                    task = tasks.getFirst();
-                    markRegion(task, Color.red);
-                    tasks.removeFirst();
+                    if(!tasks.isEmpty()) {
+                        task = tasks.getFirst();
+                        markRegion(task, Color.red);
+                        tasks.removeFirst();
+                    }
                 }
-                blurPixels(task);
+                int[] blurredPixels = getBlurredPixels(task);
+                drawBlurredPixels(task, blurredPixels);
             }
         }
     }

@@ -12,7 +12,8 @@ public class MultithreadedUnsynchronisedBlurrer extends MultithreadedBlurrer {
                 task = tasks.getFirst();
                 markRegion(task, Color.red);
                 tasks.removeFirst();
-                blurPixels(task);
+                int[] blurredPixels = getBlurredPixels(task);
+                drawBlurredPixels(task, blurredPixels);
             }
         }
     }
