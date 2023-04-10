@@ -6,25 +6,29 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class ImageModel {
     private BufferedImage sourceImage;
     private BufferedImage blurredImage;
     private LinkedList<ImageModelListener> listeners;
-    private HashMap<String, AbstractBlurrer> blurrers;
+    private LinkedHashMap<String, AbstractBlurrer> blurrers;
 
     public ImageModel() {
         sourceImage = loadSourceImage(new File("res/kitten.png"));
         blurredImage = makeBlurredImage();
         listeners = new LinkedList<>();
-        blurrers = new HashMap<>();
+        blurrers = new LinkedHashMap<>();
         blurrers.put("Simple non-threaded blurrer", new SimpleBlurrer(this));
         blurrers.put("Single-threaded blurrer", new SingleThreadBlurrer(this));
-        blurrers.put("Multi-threaded blurrer", new MultiThreadBlurrer(this));
+        blurrers.put("Multi-threaded blurrer", new MultithreadedUnsynchronisedBlurrer(this));
         blurrers.put("Multi-threaded synchronized blurrer", new MultiThreadSynchronisedBlurrer(this));
         blurrers.put("Multi-threaded blurrer (using pop)", new MultiThreadPopBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer (no waiting)", new ProducerConsumerNoWaitBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer", new ProducerConsumerBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer (sync on tasks+image)", new ProducerConsumerTwoSyncsBlurrer(this));
+        blurrers.put("Producer-Consumer blurrer (separated syncs)", new ProducerConsumerSeparateSyncsBlurrer(this));
     }
 
     /**

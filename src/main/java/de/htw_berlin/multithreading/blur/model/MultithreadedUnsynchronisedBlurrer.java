@@ -3,23 +3,21 @@ package de.htw_berlin.multithreading.blur.model;
 import java.awt.*;
 import java.util.LinkedList;
 
-public class MultiThreadSynchronisedBlurrer extends MultithreadedBlurrer {
+public class MultithreadedUnsynchronisedBlurrer extends MultithreadedBlurrer {
 
     private class BlurringThread extends Thread {
         public void run() {
             BlurTask task = null;
             while(!tasks.isEmpty()) {
-                synchronized (tasks) {
-                    task = tasks.getFirst();
-                    markRegion(task, Color.red);
-                    tasks.removeFirst();
-                }
+                task = tasks.getFirst();
+                markRegion(task, Color.red);
+                tasks.removeFirst();
                 blurPixels(task);
             }
         }
     }
 
-    public MultiThreadSynchronisedBlurrer(ImageModel model) {
+    public MultithreadedUnsynchronisedBlurrer(ImageModel model) {
         super(model);
     }
 

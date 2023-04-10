@@ -3,25 +3,17 @@ package de.htw_berlin.multithreading.blur.model;
 import java.awt.*;
 import java.util.LinkedList;
 
-public class MultiThreadPopBlurrer extends AbstractBlurrer {
+public class MultiThreadPopBlurrer extends MultithreadedBlurrer {
 
-    private LinkedList<BlurTask> tasks;
+    private LinkedList<BlurTask> tasks = new LinkedList<>();
 
     private class BlurringThread extends Thread {
         public void run() {
+            BlurTask task = null;
             while(!tasks.isEmpty()) {
-                BlurTask task = tasks.pop();
-                // First, make the part to blur red to make the build-up of the blurring visible
-                Graphics g = model.getBlurredImage().getGraphics();
-                g.setColor(Color.red);
-                g.fillRect(task.getX(), task.getY(), task.getWidth(), task.getHeight());
-                model.blurredImageChanged();
-                for (int xpos = task.getX(); xpos < task.getX()+task.getWidth(); xpos++) {
-                    for (int ypos = task.getY(); ypos < task.getY()+task.getHeight(); ypos++) {
-                        model.getBlurredImage().setRGB(xpos, ypos, getBlurredPixel(xpos, ypos, task.getRadius()));
-                        model.blurredImageChanged();
-                    }
-                }
+                task = tasks.pop();
+                markRegion(task, Color.red);
+                blurPixels(task);
             }
         }
     }
@@ -42,12 +34,4 @@ public class MultiThreadPopBlurrer extends AbstractBlurrer {
         }
     }
 
-    private void makeTasks(int radius, int size) {
-        tasks = new LinkedList<>();
-        for(int i=0; i<model.getSourceImage().getWidth(); i+=size) {
-            for(int j=0; j<model.getSourceImage().getHeight(); j+=size) {
-                tasks.add(new BlurTask(i, j, size, size, radius));
-            }
-        }
-    }
 }
