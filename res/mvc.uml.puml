@@ -1,0 +1,52 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+package "model" {
+  interface ImageModelListener
+  abstract class AbstractBlurrer
+  class SimpleBlurrer
+  class SingleThreadBlurrer
+  class ImageModel
+  ImageModel : HashMap<String, AbstractBlurrer> blurrers
+  ImageModel : LinkedList<ImageModelListener> listeners
+  ImageModel : runBlurrer(AbstractBlurrer blurrer, int radius)
+  AbstractBlurrer : {abstract} blur(int radius)
+  ImageModelListener : {abstract} blurredImageChanged()
+
+  SimpleBlurrer ..|> AbstractBlurrer
+  SingleThreadBlurrer ..|> AbstractBlurrer
+  ImageModel <--> AbstractBlurrer
+  ImageModel --> ImageModelListener
+}
+
+package "control" {
+  class BlurController
+  BlurController : blur(String name, int radius)
+
+  BlurController --> ImageModel
+}
+
+package "view" {
+    class BlurMainFrame
+    class BlurredPanel
+    class ControlsPanel
+
+    ControlsPanel : JButton blurButton
+    ControlsPanel : JSpinner radius
+    ControlsPanel : JComboBox blurMethod
+
+    BlurMainFrame --> BlurredPanel
+    BlurMainFrame --> ControlsPanel
+    BlurredPanel ..|> ImageModelListener
+    ControlsPanel --> BlurController
+    BlurredPanel --> ImageModel
+    BlurredPanel : blurredImageChanged()
+
+    note left of BlurredPanel::blurredImageChanged()
+      repaint();
+    end note
+}
+
+
+@enduml
