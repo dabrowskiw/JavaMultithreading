@@ -86,9 +86,9 @@ public class ProducerConsumerSeparateSyncsBlurrer extends MultithreadedBlurrer {
                 synchronized (tasks) {
                     tasks.add(task);
                     tasks.notifyAll();
-                    synchronized (model.getBlurredImage()) {
-                        markRegion(task, Color.red);
-                    }
+                }
+                synchronized (model.getBlurredImage()) {
+                    markRegion(task, Color.red);
                 }
             }
         }
