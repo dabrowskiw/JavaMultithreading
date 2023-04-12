@@ -1,3 +1,5 @@
+[![CC BY 4.0][cc-by-shield]][cc-by]
+
 # Multithreading in Java
 
 In diesem Repository befindet sich Beispielcode für eine Einführung in das Multithreading in Java.
@@ -14,7 +16,7 @@ Die Klassen, welche konkrete Herangehensweisen implementieren (im Diagramm exemp
 
 Veränderungen an dem verwischten Bild können dem `view` über die Methode `blurredImageChanged()` von `ImageModel` mitgeteilt werden. Diese ruft wiederum die Methode `blurredImageChanged()` in allen registrierten `ImageModelListener`-Objekten auf (das `BlurredPanel` implementiert `ImageModelListener` und registriert sich während der Initialisierung im `ImageModel` als Listener, um bei Veränderungen benachrichtigt zu werden und diese anzuzeigen).
 
-Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
+---
 
 This work is licensed under a
 [Creative Commons Attribution 4.0 International License][cc-by].
