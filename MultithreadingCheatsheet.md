@@ -6,7 +6,7 @@ Vorsicht - dieses Cheatsheet ist nicht vollumfänglich sondern enthält nur die 
 
 ### Von Thread ableiten
 
-Eigene Klasse `MyThread` von [`Thread`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html) ableiten und Logik in `public void run()` implementieren:
+Eigene Klasse `MyThread` von [`Thread`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html) ableiten und Logik in [`public void run()`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html#run()) implementieren:
 
 ```java
 public class MyThread extends Thread {
@@ -38,3 +38,297 @@ public class MyThread extends Thread {
 }
 ```
 
+Starten des Threads über [`start()`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html#start()) - dieser Aufruf ist nicht blockierend:
+
+```java
+MyThread newThread = new MyThread(500000);
+newThread.start();
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+```java
+//MyThread.java
+public class MyThread extends Thread {
+    private int numIncrements;
+    public MyThread(int numIncrements) {
+        super();
+        this.numIncrements = numIncrements;
+    }
+
+    @Override
+    public void run() {
+        int i;
+        for(i=0; i<numIncrements; i++);
+        System.out.println("i nach " + numIncrements + " Inkrementen: " + i);
+    }
+}
+```
+
+```java
+//Main.java
+public class Main {
+    public static void main(String[] args) {
+        MyThread newThread = new MyThread(100000);
+        newThread.start();
+    }
+}
+```
+</details>
+
+### Runnable implementieren
+
+Um Mehrfachvererbung zu vermeiden, kann stattdessen das Interface [`Runnable`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Runnable.html) implementiert werden und dort die [`run()`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Runnable.html#run())-Methode implementiert werden:
+
+```java
+public class MyRunnable implements Runnable {
+	@Override
+	public void run() {
+		int i;
+		for(i=0; i<500000; i++);
+		System.out.println("i nach 500000 Inkrementen: " + i);
+	}
+
+}
+```
+
+Zum Starten muss eine neue `Thread`-Instanz erstellt mit dem `Runnable` erstellt werden - wird diese dann über `start()` gestartet, wird der Code aus dem `public void run()` des im Constructor übergebenen `Runnable` ausgeführt - dieser Aufruf ist nicht blockierend:
+
+```java
+Thread newThread = new Thread(new MyRunnable());
+newThread.start();
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+```java
+//MyRunnable.java
+public class MyRunnable implements Runnable {
+    private int numIncrements;
+    public MyRunnable(int numIncrements) {
+        this.numIncrements = numIncrements;
+    }
+
+    @Override
+    public void run() {
+        int i;
+        for(i=0; i<numIncrements; i++);
+        System.out.println("i nach " + numIncrements + " Inkrementen: " + i);
+    }
+
+}
+```
+
+```java
+//Main.java
+public class Main {
+    public static void main(String[] args) {
+        Thread newThread = new Thread(new MyRunnable());
+        newThread.start();    
+    }
+}
+```
+</details>
+
+## Warten auf Threads
+
+Der Aufruf von `Thread.start()` blockiert nicht. Um auf die Beendigung eines Threads zu warten, kann die Methode [`join()`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html#join()) des Thread-Objekts verwerndet werden (optional kann eine maximale Wartezeit angegeben werden, nach der der `join()`-Aufruf returned, auch wenn der Thread noch läuft). Falls der Thread während des `join()` unterbrochen wird, wird eine [`InterruptedException`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/InterruptedException.html) geworfen, die entsprechend gefangen werden muss:
+
+```java
+MyThread t = new MyThread();
+t.start();
+try {
+    t.join();
+} catch(InterruptedException e) {
+    System.out.println("Thread was interrupted while trying to join.");
+}
+```
+
+Ob ein Thread gerade läuft, kann mit der Methode [`isAlive`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html#isAlive()) überprüft werden:
+
+```java
+MyThread t = new MyThread();
+t.start();
+System.out.println(t.isAlive()); // Vermutlich true
+try {
+    t.join();
+} catch(InterruptedException e) {
+    System.out.println("Thread was interrupted while trying to join.");
+}
+System.out.println(t.isAlive()); // false
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+Es wird ein Thread gestartet, der intern einen Counter bis 100'000 hochzählt.
+
+```java
+//SimpleCounterThread.java
+public class SimpleCounterThread extends Thread {
+    private int counter;
+    @Override
+    public void run() {
+        for(counter=0; counter<100000; counter++);
+    }
+
+    public int getCounter() {
+        return counter;
+    }
+}
+```
+
+```java
+//Main.java
+public class Main {
+    public static void main(String[] args) {
+        SimpleCounterThread t = new SimpleCounterThread();
+        t.start();
+        System.out.println(t.isAlive()); // true
+        System.out.println(t.getCounter()); // irgendein Wert unter 100'000 - der Thread läuft noch.
+        try {
+            t.join();
+        } catch(InterruptedException e) {
+            System.out.println("Thread was interrupted while trying to join.");
+        }
+        System.out.println(t.isAlive()); // false
+        System.out.println(t.getCounter()); // 100'000 - der Thread ist jetzt garantiert fertig.
+    }
+}
+```
+
+</details>
+
+
+## Synchronisieren von kritischen Bereichen
+
+Gleichzeitiger Zugriff mehrerer Threads auf kritische Bereiche kann durch [Synchronisierung](https://docs.oracle.com/javase/tutorial/essential/concurrency/sync.html) vermieden werden.
+
+### Synchronisierte Methoden
+
+Eine ganze Methode kann mittels [`synchronized`](https://docs.oracle.com/javase/tutorial/essential/concurrency/syncmeth.html) davor geschützt werden, dann mehrere Threads sie gleichzeitig ausführen:
+
+```java
+public synchronized void decreaseTaskCounter() {
+    this.numTasks--;
+}
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+Es werden 20 Threads gestartet, die jeweils in einer Schleife 100'000 Mal die statische Methode `ProjectStatus.increaseTaskCounter()` aufrufen. Danach müsste `ProjectStatus.getNumTasks()` den Wert 2'000'000 ausgeben. Ohne Synchronisierung kommt aber kleinerer Wert raus. 
+
+#### Beispiel ohne Synchronisierung
+
+```java
+//ProjectStatus.java
+public class ProjectStatus {
+    private static int numTasks=0;
+
+    public static void increaseTaskCounter() {
+        numTasks++;
+    }
+
+    public static int getNumTasks() {
+        return numTasks;
+    }
+}
+```
+
+```java
+//TaskCounterThread.java
+public class TaskCounterThread extends Thread {
+    @Override
+    public void run() {
+        for(int i=0; i<100000; i++) {
+            ProjectStatus.increaseTaskCounter();
+        }
+    }
+}
+```
+
+```java
+//Main.java
+import java.util.LinkedList;
+
+public class Main {
+    public static void main(String[] args) {
+        LinkedList<TaskCounterThread> threads = new LinkedList<>();
+        // 20 Threads erstellen
+        for(int i=0; i<20; i++) {
+            threads.add(new TaskCounterThread());
+        }
+        // Alle Threads starten
+        threads.forEach(TaskCounterThread::start);
+        // Auf die Beendigung aller Threads warten
+        try {
+            for(TaskCounterThread t : threads) {
+                t.join();
+            }
+        } catch(InterruptedException e) {
+            System.out.println("Thread was interrupted");
+        }
+        System.out.println(ProjectStatus.getNumTasks());
+    }
+}
+```
+
+#### Beispiel mit Synchronisierung
+
+```java
+//ProjectStatus.java
+public class ProjectStatus {
+    private static int numTasks=0;
+
+    public static synchronized void increaseTaskCounter() {
+        numTasks++;
+    }
+
+    public static int getNumTasks() {
+        return numTasks;
+    }
+}
+```
+
+```java
+//TaskCounterThread.java
+public class TaskCounterThread extends Thread {
+    @Override
+    public void run() {
+        for(int i=0; i<100000; i++) {
+            ProjectStatus.increaseTaskCounter();
+        }
+    }
+}
+```
+
+```java
+//Main.java
+import java.util.LinkedList;
+
+public class Main {
+    public static void main(String[] args) {
+        LinkedList<TaskCounterThread> threads = new LinkedList<>();
+        // 20 Threads erstellen
+        for(int i=0; i<20; i++) {
+            threads.add(new TaskCounterThread());
+        }
+        // Alle Threads starten
+        threads.forEach(TaskCounterThread::start);
+        // Auf die Beendigung aller Threads warten
+        try {
+            for(TaskCounterThread t : threads) {
+                t.join();
+            }
+        } catch(InterruptedException e) {
+            System.out.println("Thread was interrupted");
+        }
+        System.out.println(ProjectStatus.getNumTasks());
+    }
+}
+```
+
+</details>
