@@ -517,7 +517,7 @@ while(tasks.isEmpty()) {
 ### Wartende Threads wecken
 
 Mit den Methoden `notify()` und `notifyAll()` können wartende Threads geweckt werden - mit `notify()` ein zufälliger, mit `notifyAll()` alle:
-* 
+
 * Die Methoden `notify()` und `notifyAll()` werden auf dem Objekt aufgerufen, auf dem synchronisiert wird.
 * Der Thread, der `notify()` oder `notifyAll()` auf einem Objekt aufruft, muss sich in einem auf dieses Objekt synchronisierten Bereich befinden.
 * Ein geweckter Thread kann nicht sofort weiterlaufen, sondern muss vorher wieder die Synchronisation auf dem Objekt erhalten (stellt sich also erstmal in der Warteschleife an, weil ja der Thread, der `notify()` aufgrufen hat, gerade zwingend in einem auf das selbe Objekt synchronisierten Codeblock ist).
