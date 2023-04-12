@@ -9,7 +9,7 @@ package "model" {
   class ImageModel
   ImageModel : HashMap<String, AbstractBlurrer> blurrers
   ImageModel : LinkedList<ImageModelListener> listeners
-  ImageModel : runBlurrer(AbstractBlurrer blurrer, int radius)
+  ImageModel : runBlurrer(String blurrerName, int radius)
   AbstractBlurrer : {abstract} blur(int radius)
   AbstractBlurrer : ImageModel model
   ImageModelListener : {abstract} blurredImageChanged()
