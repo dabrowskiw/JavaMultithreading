@@ -6,6 +6,10 @@ In diesem Repository befindet sich Beispielcode für eine Einführung in das Mul
 
 Ein CheatSheet für die darin verwendeten Threading-Konzepte ist in der Datei [MultithreadingCheatsheet.md](MultithreadingCheatsheet.md) zu finden.
 
+Das Programm lädt das Bild res/kitten.png und lässt es mit unterschiedlichen (z.T. absichtlich fehlerhaften) Parallelisierungen des mean filters verwischen: 
+
+![Screenshot](res/screenshot.png)
+
 Der Programmaufbau ist hier grob gezeigt:
 
 ![UML-Diagramm des Programms](res/mvc.png)
