@@ -132,7 +132,7 @@ public class Main {
 ```
 </details>
 
-## Warten auf Threads
+## Überprüfen ob/sicherstellen dass ein Thread fertig ist
 
 Der Aufruf von `Thread.start()` blockiert nicht. Um auf die Beendigung eines Threads zu warten, kann die Methode [`join()`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Thread.html#join()) des Thread-Objekts verwerndet werden (optional kann eine maximale Wartezeit angegeben werden, nach der der `join()`-Aufruf returned, auch wenn der Thread noch läuft). Falls der Thread während des `join()` unterbrochen wird, wird eine [`InterruptedException`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/InterruptedException.html) geworfen, die entsprechend gefangen werden muss:
 
