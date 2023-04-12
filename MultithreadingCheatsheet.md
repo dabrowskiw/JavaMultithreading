@@ -493,3 +493,165 @@ public class Main {
 ```
 
 </details>
+
+## Warten und wartende Threads wecken
+
+### Warten
+
+Ein Thread, der gerade in einem synchronisierten Bereich ist, kann sich in einen Wartezustand begeben und den Bereich für andere Threads freigeben. Dafür wird die [`wait()`-Methode](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Object.html#wait()) aufgerufen:
+
+* Die Methode `wait()` wird auf dem Objekt aufgerufen, auf dem synchronisiert wird.
+* Der Thread, der `wait()` auf einem Objekt aufruft, muss sich in einem auf dieses Objekt synchronisierten Bereich befinden.
+* Es kann eine `InterruptedException` geworfen werden.
+
+```java
+while(tasks.isEmpty()) {
+    try {
+        tasks.wait();
+    } catch(InterruptedException e) {
+        return;
+    }
+}
+```
+
+### Wartende Threads wecken
+
+Mit den Methoden `notify()` und `notifyAll()` können wartende Threads geweckt werden - mit `notify()` ein zufälliger, mit `notifyAll()` alle:
+* 
+* Die Methoden `notify()` und `notifyAll()` werden auf dem Objekt aufgerufen, auf dem synchronisiert wird.
+* Der Thread, der `notify()` oder `notifyAll()` auf einem Objekt aufruft, muss sich in einem auf dieses Objekt synchronisierten Bereich befinden.
+* Ein geweckter Thread kann nicht sofort weiterlaufen, sondern muss vorher wieder die Synchronisation auf dem Objekt erhalten (stellt sich also erstmal in der Warteschleife an, weil ja der Thread, der `notify()` aufgrufen hat, gerade zwingend in einem auf das selbe Objekt synchronisierten Codeblock ist).
+
+```java
+synchronized(tasks) {
+    tasks.add(new Task());
+    tasks.notify();
+}
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+Ein `CountingTaskProducer`-Thread erstellt `CountingTask`-Objekte, die von mehreren `CountingTaskConsumer`-Threads verbraucht werden.
+
+```java
+//CountingTask.java
+public class CountingTask {
+    private int target;
+
+    public CountingTask(int target) {
+        this.target = target;
+    }
+
+    public int getTarget() {
+        return target;
+    }
+}
+```
+
+```java
+//CountingTaskProducer.java
+import java.util.Random;
+
+public class CountingTaskProducer extends Thread {
+    private int numTasks;
+
+    public CountingTaskProducer(int numTasks) {
+        this.numTasks = numTasks;
+    }
+
+    @Override
+    public void run() {
+        Random random = new Random(System.currentTimeMillis());
+        for(int i=0; i<numTasks; i++) {
+            int countTo = 100000+random.nextInt(100000); // Zufälliger Wert zwischen 100k-200k
+            synchronized(Main.tasks) {
+                Main.tasks.add(new CountingTask(countTo));
+                // Neuer Task ist dazugekommen - einen zufälligen Producer aufwecken.
+                Main.tasks.notify();
+            }
+        }
+        synchronized(Main.tasks) {
+            // Ferting mit der Produktion - alle eventuell wartenden Producer aufwecken.
+            Main.productionDone = true;
+            Main.tasks.notifyAll();
+        }
+    }
+}
+```
+
+```java
+//CountingTaskConsumer.java
+public class CountingTaskConsumer extends Thread {
+    private static int numThreads = 0;
+    private int numThread;
+
+    public CountingTaskConsumer() {
+        // Jedem Thread eine eigene Nummer geben
+        this.numThread = numThreads++;
+    }
+
+    @Override
+    public void run() {
+        while(true) {
+            CountingTask task = null;
+            synchronized(Main.tasks) {
+                while(Main.tasks.isEmpty() && !Main.productionDone) {
+                    try {
+                        System.out.println("Thread " + numThread + " waiting for more tasks...");
+                        Main.tasks.wait();
+                    } catch(InterruptedException e) {
+                        System.out.println("Thread " + numThread + " was interrupted");
+                        return;
+                    }
+                }
+                if(!Main.tasks.isEmpty()) {
+                    task = Main.tasks.pop();
+                }
+                else if(Main.productionDone) {
+                    // Aufgabenliste ist leer und es werden keine neuen mehr produziert
+                    return;
+                }
+            }
+            int counter;
+            for(counter = 0; counter < task.getTarget(); counter++);
+            System.out.println("Thread " + numThread + " counted to: " + counter);
+        }
+    }
+}
+```
+
+```java
+//Main.java
+import java.util.LinkedList;
+
+public class Main {
+    public static LinkedList<CountingTask> tasks = new LinkedList<>();
+    public static boolean productionDone = false;
+
+    public static void main(String[] args) {
+        CountingTaskProducer producer = new CountingTaskProducer(20);
+        // 8 Consumer erstellen
+        CountingTaskConsumer consumers[] = new CountingTaskConsumer[8];
+        for(int i=0; i<consumers.length; i++) {
+            consumers[i] = new CountingTaskConsumer();
+        }
+        // Alle consumer starten
+        for(CountingTaskConsumer consumer : consumers) {
+            consumer.start();
+        }
+        // Producer starten
+        producer.start();
+        // Auf alle consumer warten
+        for(CountingTaskConsumer consumer : consumers) {
+            try {
+                consumer.join();
+            } catch(InterruptedException e) {
+                // Ist OK - wir wollen hier ja nur sicherstellen, dass keiner mehr läuft.
+            }
+        }
+        System.out.println("Fertig.");
+    }
+}
+```
+</details>
