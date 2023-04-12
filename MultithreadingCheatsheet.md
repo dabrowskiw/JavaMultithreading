@@ -211,8 +211,8 @@ Gleichzeitiger Zugriff mehrerer Threads auf kritische Bereiche kann durch [Synch
 Eine ganze Methode kann mittels [`synchronized`](https://docs.oracle.com/javase/tutorial/essential/concurrency/syncmeth.html) davor geschützt werden, dann mehrere Threads sie gleichzeitig ausführen:
 
 ```java
-public synchronized void decreaseTaskCounter() {
-    this.numTasks--;
+public synchronized void increaseTaskCounter() {
+    this.numTasks++;
 }
 ```
 
@@ -327,6 +327,167 @@ public class Main {
             System.out.println("Thread was interrupted");
         }
         System.out.println(ProjectStatus.getNumTasks());
+    }
+}
+```
+
+</details>
+
+### Synchronisierung von Codebereichen auf Objekten
+
+Für feinere Kontrolle können mit dem [`synchronized` statement](https://docs.oracle.com/javase/tutorial/essential/concurrency/locksync.html) einzelne Codebereiche vor gleichzeitigem Zugriff geschützt werden. Dabei wird ein Objekt angegeben, welches als Schlüssel verwendet wird - nur ein Thread kann gleichzeitig ein Objekt als Schlüsel halten. Daraus ergibt sich:
+
+* Nur ein Thread kann in einem auf das selbe Objekt synchronisierten `synchronized`-Block sein
+* Unterschiedliche Threads können auf unterschiedlichen Objekten synchronisierten `synchronized`-Blöcken sein
+
+```java
+public class ExtendedProjectStatus {
+    private static int tasksTodo;
+    private static int tasksDone;
+    private static Object todoLock = new Object();
+    private static Object doneLock = new Object();
+
+    public static void taskPerformed() {
+        synchronized(todoLock) {
+            tasksTodo--;
+        }
+        synchronized (doneLock) {
+            tasksDone++;
+        }
+    }
+```
+
+<details>
+<summary>Komplettes Codebeispiel</summary>
+
+Es werden 20 Threads gestartet, die jeweils in einer Schleife 100'000 Mal die statische Methode `ExtendedProjectStatus.taskPerformed()` aufrufen. Danach müsste `ExtendedProjectStatus.getTasksTodo()` den Wert 0 und `ExtendedProjectStatus.getTasksDone()` den Wert 2'000'000 ausgeben. Ohne Synchronisierung kommen aber inkonsistente Werte raus.
+
+#### Beispiel ohne Synchronisierung
+
+```java
+//ExtendedProjectStatus.java
+public class ExtendedProjectStatus {
+    private static int tasksTodo = 2000000;
+    private static int tasksDone = 0;
+
+    public static void taskPerformed() {
+        tasksTodo--;
+        tasksDone++;
+    }
+
+    public static int getTasksTodo() {
+        return tasksTodo;
+    }
+
+    public static int getTasksDone() {
+        return tasksDone;
+    }
+}
+```
+
+```java
+//ExtendedTaskCounterThread.java
+public class ExtendedTaskCounterThread extends Thread {
+    @Override
+    public void run() {
+        for(int i=0; i<100000; i++) {
+            ExtendedProjectStatus.taskPerformed();
+        }
+    }
+}
+```
+
+```java
+//Main.java
+import java.util.LinkedList;
+
+public class Main {
+    public static void main(String[] args) {
+        LinkedList<ExtendedTaskCounterThread> threads = new LinkedList<>();
+        // 20 Threads erstellen
+        for(int i=0; i<20; i++) {
+            threads.add(new ExtendedTaskCounterThread());
+        }
+        // Alle Threads starten
+        threads.forEach(ExtendedTaskCounterThread::start);
+        // Auf die Beendigung aller Threads warten
+        try {
+            for(ExtendedTaskCounterThread t : threads) {
+                t.join();
+            }
+        } catch(InterruptedException e) {
+            System.out.println("Thread was interrupted");
+        }
+        System.out.println("Tasks done: " + ExtendedProjectStatus.getTasksDone());
+        System.out.println("Tasks to do: " + ExtendedProjectStatus.getTasksTodo());
+    }
+}
+```
+
+#### Beispiel mit Synchronisierung
+
+```java
+//ExtendedProjectStatus.java
+public class ExtendedProjectStatus {
+    private static int tasksTodo = 2000000;
+    private static int tasksDone = 0;
+    private static Object todoLock = new Object();
+    private static Object doneLock = new Object();
+
+    public static void taskPerformed() {
+        synchronized(todoLock) {
+            tasksTodo--;
+        }
+        synchronized (doneLock) {
+            tasksDone++;
+        }
+    }
+
+    public static int getTasksTodo() {
+        return tasksTodo;
+    }
+
+    public static int getTasksDone() {
+        return tasksDone;
+    }
+}
+```
+
+```java
+//ExtendedTaskCounterThread.java
+public class ExtendedTaskCounterThread extends Thread {
+    @Override
+    public void run() {
+        for(int i=0; i<100000; i++) {
+            ExtendedProjectStatus.taskPerformed();
+        }
+    }
+}
+```
+
+```java
+//Main.java
+import java.util.LinkedList;
+
+public class Main {
+    public static void main(String[] args) {
+        LinkedList<ExtendedTaskCounterThread> threads = new LinkedList<>();
+        // 20 Threads erstellen
+        for(int i=0; i<20; i++) {
+            threads.add(new ExtendedTaskCounterThread());
+        }
+        // Alle Threads starten
+        threads.forEach(ExtendedTaskCounterThread::start);
+        // Auf die Beendigung aller Threads warten
+        try {
+            for(ExtendedTaskCounterThread t : threads) {
+                t.join();
+            }
+        } catch(InterruptedException e) {
+            System.out.println("Thread was interrupted");
+        }
+        System.out.println("Tasks done: " + ExtendedProjectStatus.getTasksDone()); // 2'000'000
+        System.out.println("Tasks to do: " + ExtendedProjectStatus.getTasksTodo()); // 0
     }
 }
 ```
